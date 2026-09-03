@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GTA 6 EN VIVO - Día 1 de Lanzamiento</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        body { background-color: #0d0f12; color: #f3f4f6; overflow-x: hidden; position: relative; min-height: 100vh; }
+
+        #bgContainer {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: -1; overflow: hidden; opacity: 0.15; pointer-events: none; display: none;
+        }
+        #bgContainer video, #bgContainer img { width: 100%; height: 100%; object-fit: cover; }
+
+        header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 16px 32px; background: linear-gradient(180deg, rgba(20,24,33,0.95) 0%, rgba(13,15,18,0.95) 100%);
+            backdrop-filter: blur(10px); position: sticky; top: 0; z-index: 100;
+            border-bottom: 1px solid rgba(243, 156, 18, 0.2); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
+        .logo-area { font-size: 20px; font-weight: 800; color: #ffffff; letter-spacing: 0.5px; display: flex; align-items: center; gap: 10px; cursor: pointer; }
+        .live-badge-header {
+            background: #e74c3c; color: white; font-size: 11px; font-weight: 700;
+            padding: 4px 10px; border-radius: 20px; text-transform: uppercase; animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
+        .nav-controls { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .nav-btn, .admin-btn {
+            background: rgba(255, 255, 255, 0.05); color: #d1d5db; border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 9px 16px; border-radius: 20px; cursor: pointer; font-weight: 600; font-size: 13px; transition: all 0.3s ease;
+        }
+        .nav-btn:hover { background: rgba(255, 255, 255, 0.1); color: #fff; }
+        .admin-btn {
+            background: linear-gradient(135deg, #f39c12 0%, #d35400 100%); color: #fff; border: none;
+            box-shadow: 0 4px 12px rgba(243, 156, 18, 0.3);
+        }
+        .admin-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(243, 156, 18, 0.5); }
+        .notification-badge { background: #e74c3c; color: white; border-radius: 50%; padding: 2px 6px; font-size: 10px; margin-left: 6px; }
+
+        .main-container {
+            display: grid; grid-template-columns: 1fr 380px; gap: 28px;
+            padding: 32px; max-width: 1700px; margin: 0 auto; position: relative; z-index: 1;
+        }
+
+        .video-player-wrapper {
+            background: #161b22; border-radius: 16px; overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.06); box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+        }
+        .video-container { position: relative; width: 100%; background: #000; aspect-ratio: 16/9; display: flex; align-items: center; justify-content: center; }
+        .video-container video, .video-container img { width: 100%; height: 100%; object-fit: cover; }
+        
+        .stream-status-overlay {
+            position: absolute; top: 16px; left: 16px; background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(5px); padding: 6px 14px; border-radius: 8px;
+            border: 1px solid rgba(231, 76, 60, 0.4); display: flex; align-items: center; gap: 8px; z-index: 10;
+        }
+        .red-dot { width: 10px; height: 10px; background: #e74c3c; border-radius: 50%; animation: pulse 1s infinite; }
+
+        .video-meta-section { padding: 24px; }
+        .video-title { font-size: 24px; font-weight: 700; color: #ffffff; margin-bottom: 16px; line-height: 1.3; }
+        
+        .channel-info-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding-bottom: 20px; border-bottom: 1px solid rgba(255, 255, 255, 0.06); flex-wrap: wrap; gap: 15px;
+        }
+        .channel-details { display: flex; align-items: center; gap: 14px; }
+        .channel-avatar { 
+            width: 48px; height: 48px; background: linear-gradient(135deg, #f39c12, #e74c3c); 
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-weight: bold; font-size: 20px; color: white; box-shadow: 0 4px 10px rgba(243, 156, 18, 0.3);
+        }
+        
+        .action-buttons { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+        .subscribe-btn { background: #ffffff; color: #0d0f12; border: none; padding: 10px 20px; font-weight: 700; border-radius: 20px; cursor: pointer; transition: all 0.2s; }
+        .subscribe-btn:hover { background: #e5e7eb; }
+        .subscribe-btn.subscribed { background: #27ae60; color: #fff; }
+        .donate-btn { background: linear-gradient(135deg, #27ae60, #2ecc71); color: white; border: none; padding: 10px 20px; font-weight: 700; border-radius: 20px; cursor: pointer; box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3); }
+        .share-btn { background: rgba(255, 255, 255, 0.08); color: #fff; border: 1px solid rgba(255, 255, 255, 0.15); padding: 10px 16px; font-weight: 600; border-radius: 20px; cursor: pointer; font-size: 13px; }
+
+        .video-description {
+            background: rgba(255, 255, 255, 0.02); padding: 16px; border-radius: 12px; margin-top: 20px;
+            font-size: 14px; line-height: 1.6; color: #9ca3af; border: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        .sidebar-container { display: flex; flex-direction: column; gap: 24px; }
+        .chat-box-card {
+            background: #161b22; border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.06);
+            display: flex; flex-direction: column; height: 500px; box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+        }
+        .chat-header { padding: 16px 20px; border-bottom: 1px solid rgba(255, 255, 255, 0.06); font-weight: 700; font-size: 15px; color: #fff; display: flex; justify-content: space-between; align-items: center; }
+        .chat-messages { flex-grow: 1; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+        .chat-msg { font-size: 13px; line-height: 1.4; word-break: break-word; }
+        .chat-msg span { font-weight: 700; color: #f39c12; margin-right: 6px; }
+        .chat-input-area { padding: 16px; border-top: 1px solid rgba(255, 255, 255, 0.06); display: flex; gap: 10px; }
+        .chat-input-area input { flex-grow: 1; padding: 10px 14px; background: #0d0f12; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px; color: #fff; outline: none; font-size: 13px; }
+        .chat-input-area button { background: #f39c12; color: #0d0f12; border: none; padding: 0 16px; border-radius: 10px; font-weight: 700; cursor: pointer; }
+
+        .section-subtitle { font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+        .sidebar-recommendations { display: flex; flex-direction: column; gap: 12px; }
+        .recommendation-card { display: flex; gap: 12px; cursor: pointer; padding: 10px; border-radius: 12px; background: #161b22; border: 1px solid rgba(255, 255, 255, 0.04); }
+        .recommendation-card:hover { border-color: rgba(243, 156, 18, 0.3); }
+        .recommendation-thumb { width: 120px; height: 68px; background: #0d0f12; border-radius: 8px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: #f39c12; font-size: 11px; font-weight: bold; }
+        .recommendation-info h4 { font-size: 13px; font-weight: 600; margin-bottom: 4px; color: #fff; }
+        .recommendation-info p { font-size: 11px; color: #9ca3af; }
+
+        .modal-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(13, 15, 18, 0.85); backdrop-filter: blur(8px);
+            z-index: 1000; justify-content: center; align-items: center;
+        }
+        .modal-content {
+            background: #161b22; padding: 32px; border-radius: 20px; width: 100%; max-width: 480px;
+            display: flex; flex-direction: column; gap: 18px; border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+        }
+        .modal-content h3 { color: #fff; font-size: 20px; font-weight: 700; }
+        .modal-content label { font-size: 13px; color: #9ca3af; font-weight: 500; }
+        .modal-content input, .modal-content textarea, .modal-content select {
+            width: 100%; padding: 12px; background: #0d0f12; border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white; border-radius: 10px; outline: none; font-size: 14px;
+        }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 10px; }
+        .modal-actions button { padding: 10px 20px; border-radius: 10px; cursor: pointer; border: none; font-weight: 600; font-size: 14px; }
+        .btn-cancel { background: rgba(255,255,255,0.05); color: #fff; }
+        .btn-save { background: #f39c12; color: #0d0f12; font-weight: 700; }
+
+        .admin-only { display: none; }
+        .admin-item-actions { margin-top: 6px; display: flex; gap: 8px; }
+        .btn-delete { background: rgba(231, 76, 60, 0.2); color: #e74c3c; border: 1px solid rgba(231, 76, 60, 0.4); padding: 3px 8px; border-radius: 6px; font-size: 10px; cursor: pointer; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div id="bgContainer"></div>
+
+    <header>
+        <div class="logo-area" onclick="goHome()">
+            🎮 GTA 6 EN VIVO 
+            <span class="live-badge-header">En Vivo Día 1</span>
+        </div>
+        <div class="nav-controls">
+            <button class="admin-btn admin-only" onclick="openGoLiveModal()">⚙️ Configurar En Vivo</button>
+            <button class="admin-btn admin-only" onclick="openUploadModal()">+ Subir Contenido</button>
+            <button class="admin-btn admin-only" onclick="openBgModal()">🎬 Fondo</button>
+            <button class="admin-btn admin-only" onclick="openSubscribersModal()">📬 Suscriptores <span id="adminNotifBadge" class="notification-badge" style="display:none;">0</span></button>
+            <button class="nav-btn" id="roleSwitchBtn" onclick="toggleRole()">Panel Administrador</button>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <div class="video-player-wrapper">
+            <div class="video-container" id="mainMediaContainer">
+                <div class="stream-status-overlay">
+                    <div class="red-dot"></div>
+                    <span style="font-size: 12px; font-weight: 700;" id="streamBadgeText">TRANSMITIENDO EN VIVO • DÍA 1</span>
+                </div>
+            </div>
+            
+            <div class="video-meta-section">
+                <div class="video-title" id="mainVideoTitle">GTA 6 EN VIVO - Explorando Vice City desde el día 1 de lanzamiento oficial</div>
+                
+                <div class="channel-info-row">
+                    <div class="channel-details">
+                        <div class="channel-avatar">G6</div>
+                        <div>
+                            <strong style="color: #fff; font-size: 15px;">GTA 6 Live Official</strong>
+                            <p style="font-size: 12px; color: #9ca3af;"><span id="subCount">0</span> suscriptores reales</p>
+                        </div>
+                    </div>
+                    <div class="action-buttons">
+                        <button class="share-btn" onclick="shareCurrentStream()">🔗 Copiar URL</button>
+                        <button class="donate-btn" onclick="openDonateModal()">💰 Donar</button>
+                        <button class="subscribe-btn" id="subBtn" onclick="openSubscribeModal()">Suscribirse</button>
+                    </div>
+                </div>
+
+                <div class="video-description" id="mainVideoDesc">
+                    <strong>🔴 EN VIVO DESDE EL DÍA 1 DEL LANZAMIENTO MUNDIAL</strong><br>
+                    ¡Acompañanos en este directo histórico! Recorriendo las calles de Leonida.
+                </div>
+            </div>
+        </div>
+
+        <div class="sidebar-container">
+            <div class="chat-box-card">
+                <div class="chat-header">
+                    <span>💬 Chat en Directo</span>
+                    <span style="font-size: 11px; color: #2ecc71;">● Activo</span>
+                </div>
+                <div class="chat-messages" id="chatMessages"></div>
+                <div class="chat-input-area">
+                    <input type="text" id="chatName" placeholder="Tu nombre..." style="max-width: 90px;">
+                    <input type="text" id="chatInput" placeholder="Escribe un mensaje..." onkeypress="handleChatEnter(event)">
+                    <button onclick="sendChatMessage()">Enviar</button>
+                </div>
+            </div>
+
+            <div>
+                <div class="section-subtitle">Transmisiones del Día 1</div>
+                <div class="sidebar-recommendations" id="recommendationsList" style="margin-top: 10px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="goLiveModal" class="modal-overlay">
+        <div class="modal-content">
+            <h3>⚙️ Configurar Vídeo "En Vivo"</h3>
+            <label>Título del Directo:</label>
+            <input type="text" id="liveInputTitle" placeholder="Ej: GTA 6 EN VIVO - Día 1">
+            <label>Descripción:</label>
+            <textarea id="liveInputDesc" rows="2" placeholder="Detalles de la transmisión..."></textarea>
+            <label>URL Directa de Vídeo (MP4):</label>
+            <input type="text" id="liveInputUrl" placeholder="https://ejemplo.com/video.mp4">
+            <label style="margin-top: 4px;">O subir archivo de video local (MP4):</label>
+            <input type="file" id="liveFileInput" accept="video/mp4">
+            
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closeModals()">Cancelar</button>
+                <button class="btn-save" onclick="saveLiveStreamConfig()">Guardar y Aplicar En Vivo</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="bgModal" class="modal-overlay">
+        <div class="modal-content">
+            <h3>🎬 Fondo Personalizado (Bucle o Imagen)</h3>
+            <label>URL Directa o Subir Archivo:</label>
+            <input type="text" id="bgUrlInput" placeholder="https://ejemplo.com/video.mp4 o .jpg">
+            <label style="margin-top: 6px;">O subir archivo local (MP4 o JPEG):</label>
+            <input type="file" id="bgFileInput" accept="video/mp4,image/jpeg,image/jpg">
+            
+            <div style="display: flex; gap: 10px; margin-top: 15px;">
+                <button class="btn-save" style="flex:1;" onclick="applyBackground(true)">Aplicar Fondo</button>
+                <button class="btn-cancel" style="flex:1; background: rgba(231,76,60,0.2); color:#e74c3c;" onclick="applyBackground(false)">Quitar Fondo</button>
+            </div>
+            <div class="modal-actions" style="margin-top: 5px;">
+                <button class="btn-cancel" onclick="closeModals()">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="subscribeModal" class="modal-overlay">
+        <div class="modal-content">
+            <h3>Suscribirse al canal 🔔</h3>
+            <label>Tu Nombre o Nickname:</label>
+            <input type="text" id="subNameInput" placeholder="Ej: Juan Pérez">
+            <label>Correo Electrónico Real:</label>
+            <input type="email" id="subEmailInput" placeholder="tucorreo@gmail.com">
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closeModals()">Cancelar</button>
+                <button class="btn-save" onclick="confirmSubscription()">Confirmar Suscripción</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="subscribersModal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 550px;">
+            <h3>📬 Notificaciones de Nuevos Suscriptores</h3>
+            <p style="font-size: 12px; color: #9ca3af;">Lista de correos y usuarios reales registrados:</p>
+            <div id="subscribersListContainer" style="max-height: 250px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; margin-top: 10px;"></div>
+            <div class="modal-actions">
+                <button class="btn-save" onclick="closeModals()">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="donateModal" class="modal-overlay">
+        <div class="modal-content">
+            <h3>Apoya la transmisión 💰</h3>
+            <label>Método de Donación:</label>
+            <select id="donateMethod" onchange="toggleDonateInfo()">
+                <option value="qik">Banco Qik (Cuenta: 1001531038)</option>
+                <option value="paypal">PayPal (@EdwinHernandez926)</option>
+            </select>
+            <div id="qikInfo" style="background: #0d0f12; padding: 14px; border-radius: 10px; border: 1px dashed #f39c12;">
+                <p style="font-size: 13px; color: #f39c12; margin-bottom: 6px;"><strong>Banco Qik:</strong></p>
+                <p style="font-size: 14px; color: #fff;">Número de Cuenta: <strong>1001531038</strong></p>
+            </div>
+            <div id="paypalInfo" style="display: none; background: #0d0f12; padding: 14px; border-radius: 10px; border: 1px dashed #0070ba;">
+                <p style="font-size: 13px; color: #3b82f6; margin-bottom: 6px;"><strong>PayPal:</strong></p>
+                <p style="font-size: 14px; color: #fff;"><strong>paypal.me/EdwinHernandez926</strong></p>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closeModals()">Cancelar</button>
+                <button class="btn-save" onclick="redirectToDonation()">Ir a Pagar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="uploadModal" class="modal-overlay">
+        <div class="modal-content">
+            <h3>Subir Contenido (Video o Imagen JPEG)</h3>
+            <label>Título:</label>
+            <input type="text" id="inputTitle">
+            <label>Descripción:</label>
+            <textarea id="inputDesc" rows="3"></textarea>
+            <label>Archivo (MP4 o JPEG):</label>
+            <input type="file" id="inputFile" accept="video/mp4,image/jpeg,image/jpg">
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closeModals()">Cancelar</button>
+                <button class="btn-save" onclick="uploadContent()">Publicar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isAdmin = false;
+        let adminPassword = localStorage.getItem('gta6_admin_pass') || 'admin123';
+        
+        let subscribers = JSON.parse(localStorage.getItem('gta6_subscribers')) || [];
+        let isUserSubscribed = localStorage.getItem('gta6_user_subscribed') === 'true';
+
+        let bgActive = localStorage.getItem('gta6_bg_active') === 'true';
+        let bgSrc = localStorage.getItem('gta6_bg_src') || '';
+        let bgType = localStorage.getItem('gta6_bg_type') || 'video';
+
+        let liveStreamData = JSON.parse(localStorage.getItem('gta6_live_stream_config')) || {
+            id: "stream-principal-dia-1",
+            title: "GTA 6 EN VIVO - Explorando Vice City desde el día 1 de lanzamiento oficial",
+            description: "🔴 EN VIVO DESDE EL DÍA 1 DEL LANZAMIENTO MUNDIAL.",
+            src: "https://www.w3schools.com/html/mov_bbb.mp4",
+            type: "video",
+            date: "En Vivo", isLive: true
+        };
+
+        let videos = JSON.parse(localStorage.getItem('gta6_videos')) || [];
+
+        let globalComments = JSON.parse(localStorage.getItem('gta6_comments')) || [
+            { user: "GamerPro99", text: "¡Tremendos gráficos en este día 1!" },
+            { user: "Sofia_GT", text: "Esperando esta transmisión con ansias." }
+        ];
+
+        function initApp() {
+            updateSubUI();
+            renderChat();
+            renderVideos();
+            initBackground();
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const streamId = urlParams.get('stream');
+            
+            if (streamId === liveStreamData.id || !streamId) {
+                selectLiveStream(false);
+            } else {
+                const foundIndex = videos.findIndex(v => v.id == streamId);
+                if (foundIndex !== -1) {
+                    selectVideo(foundIndex, false);
+                } else {
+                    selectLiveStream(false);
+                }
+            }
+        }
+
+        function initBackground() {
+            const container = document.getElementById('bgContainer');
+            container.innerHTML = '';
+            
+            if (bgActive && bgSrc) {
+                if (bgType === 'image') {
+                    const img = document.createElement('img');
+                    img.src = bgSrc;
+                    container.appendChild(img);
+                } else {
+                    const vid = document.createElement('video');
+                    vid.src = bgSrc;
+                    vid.autoplay = true;
+                    vid.muted = true;
+                    vid.loop = true;
+                    vid.playsInline = true;
+                    vid.play().catch(e => console.log("Autoplay fondo bloqueado"));
+                    container.appendChild(vid);
+                }
+                container.style.display = 'block';
+            } else {
+                container.style.display = 'none';
+            }
+            document.getElementById('bgUrlInput').value = bgSrc;
+        }
+
+        function applyBackground(activate) {
+            bgActive = activate;
+            localStorage.setItem('gta6_bg_active', activate);
+
+            if (activate) {
+                const fileInput = document.getElementById('bgFileInput');
+                const urlInput = document.getElementById('bgUrlInput').value.trim();
+
+                if (fileInput.files.length > 0) {
+                    const file = fileInput.files[0];
+                    bgSrc = URL.createObjectURL(file);
+                    bgType = file.type.includes('image') ? 'image' : 'video';
+                } else if (urlInput) {
+                    bgSrc = urlInput;
+                    bgType = (urlInput.includes('.jpg') || urlInput.includes('.jpeg')) ? 'image' : 'video';
+                }
+                localStorage.setItem('gta6_bg_src', bgSrc);
+                localStorage.setItem('gta6_bg_type', bgType);
+            }
+            initBackground();
+            closeModals();
+            alert(activate ? "¡Fondo personalizado aplicado correctamente!" : "Fondo desactivado.");
+        }
+
+        function goHome() { 
+            window.location.href = window.location.pathname; 
+        }
+
+        function renderVideos() {
+            const listContainer = document.getElementById('recommendationsList');
+            listContainer.innerHTML = '';
+
+            const liveCard = document.createElement('div');
+            liveCard.className = 'recommendation-card';
+            liveCard.innerHTML = `
+                <div class="recommendation-thumb" style="color:#e74c3c;">🔴 EN VIVO</div>
+                <div class="recommendation-info" style="flex-grow:1;">
+                    <h4 style="color: #f39c12;">${liveStreamData.title}</h4>
+                    <p><span style="color:#e74c3c; font-weight:bold;">● EN DIRECTO AHORA</span></p>
+                </div>
+            `;
+            liveCard.onclick = () => selectLiveStream(true);
+            listContainer.appendChild(liveCard);
+
+            videos.forEach((video, index) => {
+                const card = document.createElement('div');
+                card.className = 'recommendation-card';
+                let adminActionsHTML = isAdmin ? `<div class="admin-item-actions"><button class="btn-delete" onclick="event.stopPropagation(); deleteVideo(${index})">Eliminar</button></div>` : '';
+                
+                card.innerHTML = `
+                    <div class="recommendation-thumb">${video.type === 'image' ? '🖼️ JPEG' : '▶ Ver'}</div>
+                    <div class="recommendation-info" style="flex-grow:1;">
+                        <h4>${video.title}</h4>
+                        <p>${video.date}</p>
+                        ${adminActionsHTML}
+                    </div>
+                `;
+                card.onclick = () => selectVideo(index, true);
+                listContainer.appendChild(card);
+            });
+        }
+
+        function selectLiveStream(updateBrowserUrl = false) {
+            const container = document.getElementById('mainMediaContainer');
+            const statusOverlay = container.querySelector('.stream-status-overlay');
+            container.innerHTML = '';
+            container.appendChild(statusOverlay);
+
+            const vid = document.createElement('video');
+            vid.id = 'mainVideoPlayer';
+            vid.src = liveStreamData.src;
+            vid.controls = true;
+            vid.autoplay = true;
+            vid.loop = true;
+            vid.play().catch(e => console.log("Autoplay restringido"));
+            container.appendChild(vid);
+
+            document.getElementById('mainVideoTitle').innerText = liveStreamData.title;
+            document.getElementById('mainVideoDesc').innerHTML = `<strong>🔴 EN VIVO - DÍA 1</strong><br>${liveStreamData.description}`;
+            document.getElementById('streamBadgeText').innerText = "TRANSMITIENDO EN VIVO • DÍA 1";
+
+            if (updateBrowserUrl) {
+                const newurl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+                window.history.pushState({path:newurl},'',newurl);
+            }
+        }
+
+        function selectVideo(index, updateBrowserUrl = false) {
+            const media = videos[index];
+            const container = document.getElementById('mainMediaContainer');
+            
+            const statusOverlay = container.querySelector('.stream-status-overlay');
+            container.innerHTML = '';
+            container.appendChild(statusOverlay);
+
+            if (media.type === 'image') {
+                const img = document.createElement('img');
+                img.src = media.src;
+                container.appendChild(img);
+            } else {
+                const vid = document.createElement('video');
+                vid.id = 'mainVideoPlayer';
+                vid.src = media.src;
+                vid.controls = true;
+                vid.autoplay = true;
+                vid.play().catch(e => console.log("Autoplay restringido"));
+                container.appendChild(vid);
+            }
+
+            document.getElementById('mainVideoTitle').innerText = media.title;
+            document.getElementById('mainVideoDesc').innerHTML = `<strong>${media.date}</strong><br>${media.description}`;
+            document.getElementById('streamBadgeText').innerText = "VISUALIZANDO CONTENIDO";
+
+            if (updateBrowserUrl && media.id) {
+                const newurl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?stream=' + media.id;
+                window.history.pushState({path:newurl},'',newurl);
+            }
+        }
+
+        function shareCurrentStream() {
+            const currentUrl = window.location.href;
+            navigator.clipboard.writeText(currentUrl).then(() => {
+                alert("¡Enlace único copiado!");
+            }).catch(() => {
+                prompt("Copia este enlace:", currentUrl);
+            });
+        }
+
+        function openSubscribeModal() {
+            if (isUserSubscribed) {
+                alert("Ya estás suscrito con este dispositivo.");
+                return;
+            }
+            document.getElementById('subscribeModal').style.display = 'flex';
+        }
+
+        function confirmSubscription() {
+            const name = document.getElementById('subNameInput').value.trim();
+            const email = document.getElementById('subEmailInput').value.trim();
+
+            if (!name || !email || !email.includes('@')) {
+                alert("Por favor, introduce un nombre y un correo electrónico válido.");
+                return;
+            }
+
+            const newSub = { name, email, date: new Date().toLocaleString() };
+            subscribers.push(newSub);
+            localStorage.setItem('gta6_subscribers', JSON.stringify(subscribers));
+
+            isUserSubscribed = true;
+            localStorage.setItem('gta6_user_subscribed', 'true');
+
+            closeModals();
+            updateSubUI();
+            alert("¡Te has suscrito con éxito!");
+        }
+
+        function updateSubUI() {
+            const count = subscribers.length;
+            document.getElementById('subCount').innerText = count;
+
+            const btn = document.getElementById('subBtn');
+            if (isUserSubscribed) {
+                btn.innerText = "Suscrito ✓";
+                btn.classList.add('subscribed');
+            } else {
+                btn.innerText = "Suscribirse";
+                btn.classList.remove('subscribed');
+            }
+
+            const badge = document.getElementById('adminNotifBadge');
+            if (count > 0 && isAdmin) {
+                badge.innerText = count;
+                badge.style.display = 'inline-block';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        function openSubscribersModal() {
+            const container = document.getElementById('subscribersListContainer');
+            container.innerHTML = '';
+            
+            if (subscribers.length === 0) {
+                container.innerHTML = `<p style="color:#9ca3af; text-align:center; padding: 20px;">No hay suscriptores nuevos todavía.</p>`;
+            } else {
+                subscribers.forEach((sub, i) => {
+                    const item = document.createElement('div');
+                    item.style.background = '#0d0f12';
+                    item.style.padding = '10px 14px';
+                    item.style.borderRadius = '8px';
+                    item.style.border = '1px solid rgba(255,255,255,0.06)';
+                    item.innerHTML = `
+                        <p style="font-size: 13px; color: #fff; font-weight: 600;">${i+1}. ${sub.name} <span style="color: #f39c12; font-weight: normal; font-size: 12px;">(${sub.email})</span></p>
+                        <p style="font-size: 11px; color: #9ca3af; margin-top: 2px;">Registrado el: ${sub.date}</p>
+                    `;
+                    container.appendChild(item);
+                });
+            }
+            document.getElementById('subscribersModal').style.display = 'flex';
+        }
+
+        function renderChat() {
+            const chatContainer = document.getElementById('chatMessages');
+            chatContainer.innerHTML = '';
+            globalComments.forEach(c => {
+                const msgDiv = document.createElement('div');
+                msgDiv.className = 'chat-msg';
+                msgDiv.innerHTML = `<span>${escapeHtml(c.user)}:</span> ${escapeHtml(c.text)}`;
+                chatContainer.appendChild(msgDiv);
+            });
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function sendChatMessage() {
+            const nameInput = document.getElementById('chatName');
+            const msgInput = document.getElementById('chatInput');
+            let userName = nameInput.value.trim() || "Espectador";
+            let text = msgInput.value.trim();
+            if (!text) return;
+
+            globalComments.push({ user: userName, text: text });
+            localStorage.setItem('gta6_comments', JSON.stringify(globalComments));
+            renderChat();
+            msgInput.value = '';
+        }
+
+        function handleChatEnter(e) { if (e.key === 'Enter') sendChatMessage(); }
+
+        function toggleRole() {
+            if (!isAdmin) {
+                let password = prompt("Introduce la contraseña de administrador:");
+                if (password === adminPassword) {
+                    isAdmin = true;
+                    updateUIRole();
+                    alert("Modo Administrador activado.");
+                } else if (password !== null) {
+                    alert("Contraseña incorrecta.");
+                }
+            } else {
+                isAdmin = false;
+                updateUIRole();
+                alert("Has salido del modo Administrador.");
+            }
+        }
+
+        function updateUIRole() {
+            const adminElements = document.querySelectorAll('.admin-only');
+            const switchBtn = document.getElementById('roleSwitchBtn');
+            if (isAdmin) {
+                adminElements.forEach(el => el.style.display = 'inline-block');
+                switchBtn.innerText = 'Cerrar Sesión (Admin)';
+                switchBtn.style.background = '#e74c3c';
+            } else {
+                adminElements.forEach(el => el.style.display = 'none');
+                switchBtn.innerText = 'Panel Administrador';
+                switchBtn.style.background = '';
+            }
+            updateSubUI();
+            renderVideos();
+        }
+
+        function openGoLiveModal() {
+            document.getElementById('liveInputTitle').value = liveStreamData.title;
+            document.getElementById('liveInputDesc').value = liveStreamData.description;
+            document.getElementById('liveInputUrl').value = liveStreamData.src.startsWith('blob:') ? '' : liveStreamData.src;
+            document.getElementById('goLiveModal').style.display = 'flex';
+        }
+
+        function openUploadModal() { document.getElementById('uploadModal').style.display = 'flex'; }
+        function openBgModal() { document.getElementById('bgModal').style.display = 'flex'; }
+        function openDonateModal() { document.getElementById('donateModal').style.display = 'flex'; }
+        function closeModals() { document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none'); }
+
+        function toggleDonateInfo() {
+            const method = document.getElementById('donateMethod').value;
+            document.getElementById('qikInfo').style.display = method === 'qik' ? 'block' : 'none';
+            document.getElementById('paypalInfo').style.display = method === 'paypal' ? 'block' : 'none';
+        }
+
+        function redirectToDonation() {
+            const method = document.getElementById('donateMethod').value;
+            window.open(method === 'qik' ? 'https://www.qik.com.do/' : 'https://paypal.me/EdwinHernandez926', '_blank');
+            closeModals();
+        }
+
+        function saveLiveStreamConfig() {
+            const title = document.getElementById('liveInputTitle').value.trim();
+            const desc = document.getElementById('liveInputDesc').value.trim();
+            const url = document.getElementById('liveInputUrl').value.trim();
+            const fileInput = document.getElementById('liveFileInput');
+
+            if (!title) {
+                alert("Ingresa un título para la transmisión en vivo.");
+                return;
+            }
+
+            let videoSrc = liveStreamData.src;
+            if (fileInput.files.length > 0) {
+                videoSrc = URL.createObjectURL(fileInput.files[0]);
+            } else if (url) {
+                videoSrc = url;
+            }
+
+            liveStreamData = {
+                id: "stream-principal-dia-1",
+                title: title,
+                description: desc || "En vivo",
+                src: videoSrc,
+                type: "video",
+                date: "En Vivo",
+                isLive: true
+            };
+
+            localStorage.setItem('gta6_live_stream_config', JSON.stringify(liveStreamData));
+            renderVideos();
+            selectLiveStream(true);
+            closeModals();
+            alert("¡Señal de transmisión en vivo actualizada correctamente!");
+        }
+
+        function uploadContent() {
+            const title = document.getElementById('inputTitle').value.trim();
+            const fileInput = document.getElementById('inputFile');
+            if (!title || fileInput.files.length === 0) { alert("Completa los campos."); return; }
+
+            const file = fileInput.files[0];
+            const isImage = file.type.includes('image');
+
+            videos.unshift({
+                id: 'media-' + Date.now(), title,
+                description: document.getElementById('inputDesc').value.trim() || "",
+                src: URL.createObjectURL(file),
+                type: isImage ? "image" : "video",
+                date: "Hoy", views: "0", isLive: false
+            });
+            localStorage.setItem('gta6_videos', JSON.stringify(videos));
+            renderVideos();
+            closeModals();
+            selectVideo(0, true);
+        }
+
+        function deleteVideo(index) {
+            if (confirm("¿Eliminar este contenido?")) {
+                videos.splice(index, 1);
+                localStorage.setItem('gta6_videos', JSON.stringify(videos));
+                renderVideos();
+                selectLiveStream(true);
+            }
+        }
+
+        function escapeHtml(text) {
+            const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+            return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+        }
+
+        initApp();
+    </script>
+</body>
+</html>
